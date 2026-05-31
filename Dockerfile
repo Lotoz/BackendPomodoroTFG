@@ -12,6 +12,6 @@ WORKDIR /app
 # Copia el arranque
 COPY --from=build /app/target/*.jar app.jar
 # Exponemos el puerto de Spring Boot
-EXPOSE 8080
+EXPOSE 10000
 # Comando de arranque
 ENTRYPOINT ["java", "-jar", "app.jar"]
