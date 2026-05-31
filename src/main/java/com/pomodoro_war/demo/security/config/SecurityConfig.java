@@ -48,21 +48,24 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 2. AÑADIMOS EL BEAN DE CONFIGURACIÓN DE CORS
+    // AÑADIMOS EL BEAN DE CONFIGURACIÓN DE CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Origen de tu app Vue
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        // Métodos permitidos (¡Incluyendo PATCH y OPTIONS!)
+
+        // AÑADE AQUÍ LA URL DE VERCEL (sin la barra final /)
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "https://frontend-pomodoro-tfg.vercel.app" // <--- PÓN AQUÍ LA URL REAL DE VERCEL
+        ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        // Cabeceras permitidas (Authorization es vital para el JWT)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
-        // Permitir credenciales
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        // Aplicamos CORS a todas las rutas de la API
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
