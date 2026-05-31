@@ -1,14 +1,10 @@
 package com.pomodoro_war.demo.entities.lore;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.Id;
 
 @Setter
 @Entity
@@ -24,7 +20,9 @@ public class Bestiary {
 
     private String name;
     private String zone;
+    @Column(columnDefinition = "TEXT")
     private String description;
+    @Column(length = 1000)
     private String photo;
     private String team; //Si es hero o bestia
 
