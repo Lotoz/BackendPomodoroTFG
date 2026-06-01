@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // IMPORTANTE: Permitimos explícitamente las peticiones OPTIONS pre-flight
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll() // Rutas públicas para login y registro
+                        .requestMatchers("/api/auth/**").permitAll()// Rutas públicas para login y registro
                         .anyRequest().authenticated() // Todas las demás requieren token
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -21,6 +21,7 @@ public class User {
     private String password;
     private String email;
     private String masterName;
+    private String resetCode;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
