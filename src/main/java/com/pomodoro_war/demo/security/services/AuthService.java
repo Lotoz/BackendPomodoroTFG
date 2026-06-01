@@ -28,10 +28,10 @@ public class AuthService {
     private final JwtService jwtService;
 
     // Leemos las variables desde Render / application.properties
-    @Value("${brevo.api.key}")
+    @Value("${brevo.api.key:NO_KEY}")
     private String brevoApiKey;
 
-    @Value("${brevo.sender.email}")
+    @Value("${brevo.sender.email:NO_EMAIL}")
     private String senderEmail;
 
     public AuthResponse register(RegisterRequest request) {
