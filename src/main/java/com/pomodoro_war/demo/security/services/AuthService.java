@@ -75,6 +75,7 @@ public class AuthService {
 
         // Enviamos el correo usando la API de Brevo
         sendEmailViaBrevo(user.getEmail(), user.getUsername(), code);
+        System.out.println("usuario: " + user.getUsername() +" code:" + code);
     }
 
 
