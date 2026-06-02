@@ -40,6 +40,7 @@ public class SecurityConfig {
                         // IMPORTANTE: Permitimos explícitamente las peticiones OPTIONS pre-flight
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()// Rutas públicas para login y registro
+                        .requestMatchers("/api/admin/**").authenticated()
                         .anyRequest().authenticated() // Todas las demás requieren token
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -56,7 +57,7 @@ public class SecurityConfig {
         // AÑADE AQUÍ LA URL DE VERCEL (sin la barra final /)
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "https://frontend-pomodoro-tfg.vercel.app" // <--- PÓN AQUÍ LA URL REAL DE VERCEL
+                "https://frontend-pomodoro-tfg.vercel.app"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));

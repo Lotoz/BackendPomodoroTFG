@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -28,5 +30,15 @@ public class ProfileController {
             @RequestBody UpdatePasswordRequest request,
             Authentication auth) {
         return ResponseEntity.ok(profileService.updatePassword(auth.getName(), request));
+    }
+
+    @PostMapping("/reset-progress")
+    public ResponseEntity<ProfileConfigResponse> resetProgress(Authentication auth) {
+        return ResponseEntity.ok(profileService.resetProgress(auth.getName()));
+    }
+
+    @PostMapping("/delete-account")
+    public ResponseEntity<ProfileConfigResponse> deleteAccount(Authentication auth) {
+        return ResponseEntity.ok(profileService.deleteAccount(auth.getName()));
     }
 }

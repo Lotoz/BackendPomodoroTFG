@@ -23,6 +23,9 @@ public class User {
     private String masterName;
     private String resetCode;
 
+    //Rol de usuario para permisos
+    private String role;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Task> tasks;
 

@@ -44,6 +44,10 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setMasterName(request.getMasterName());
+
+        // Todos los reclutados son usuarios, los admin se dan de alta manualmente desde el admin
+        user.setRole("USER");
+
         userRepository.save(user);
 
         String jwtToken = jwtService.generateToken(user.getUsername());
