@@ -27,11 +27,11 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    // Leemos las variables desde Render / application.properties
-    @Value("${brevo.api.key:NO_KEY}")
-    private String brevoApiKey;
+    //Leemos las variables de Resend
+    @Value("${resend.api.key:NO_KEY}")
+    private String resendApiKey;
 
-    @Value("${brevo.sender.email:NO_EMAIL}")
+    @Value("${resend.sender.email:NO_EMAIL}")
     private String senderEmail;
 
     public AuthResponse register(RegisterRequest request) {
@@ -62,22 +62,19 @@ public class AuthService {
         return new AuthResponse(jwtToken, user.getMasterName());
     }
 
-
-    //SOLICITAR CÓDIGO (VÍA API REST)
+    // SOLICITAR CÓDIGO (VÍA API REST DE RESEND)
     public void requestPasswordReset(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ese correo."));
 
-        // Generamos un código de 6 dígitos
         String code = String.format("%06d", new Random().nextInt(999999));
         user.setResetCode(code);
         userRepository.save(user);
 
-        // Enviamos el correo usando la API de Brevo
-        sendEmailViaBrevo(user.getEmail(), user.getUsername(), code);
-        System.out.println("usuario: " + user.getUsername() +" code:" + code);
+        // Llamamos al nuevo método de Resend
+        sendEmailViaResend(user.getEmail(), user.getUsername(), code);
+        System.out.println("usuario: " + user.getUsername() + " code:" + code);
     }
-
 
     // RESTABLECER CONTRASEÑA
     public void resetPassword(ResetPasswordRequest request) {
@@ -93,22 +90,25 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    //llamada apirest a brevo
-    private void sendEmailViaBrevo(String toEmail, String username, String code) {
+    // ==========================================
+    // LLAMADA API REST A RESEND
+    // ==========================================
+    private void sendEmailViaResend(String toEmail, String username, String code) {
         RestTemplate restTemplate = new RestTemplate();
-        String url = "https://api.brevo.com/v3/smtp/email";
+        String url = "https://api.resend.com/emails";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("api-key", brevoApiKey);
+        // Resend requiere la palabra "Bearer" antes de la clave
+        headers.set("Authorization", "Bearer " + resendApiKey);
         headers.set("accept", "application/json");
 
-        // Creamos el JSON a mano para enviar la petición
+        // Creamos el JSON adaptado a Resend (es más simple que Brevo)
         String body = "{"
-                + "\"sender\": {\"name\": \"Fortaleza Pomodoro\", \"email\": \"" + senderEmail + "\"},"
-                + "\"to\": [{\"email\": \"" + toEmail + "\", \"name\": \"" + username + "\"}],"
+                + "\"from\": \"" + senderEmail + "\","
+                + "\"to\": [\"" + toEmail + "\"],"
                 + "\"subject\": \"El Cuervo Mensajero: Tu nueva llave de la Fortaleza\","
-                + "\"htmlContent\": \"<div style='font-family: sans-serif; background-color: #1a0d2e; color: #f0e6ff; padding: 30px; border-radius: 10px; border: 2px solid #7d33cc; text-align: center; max-width: 500px; margin: 0 auto;'>"
+                + "\"html\": \"<div style='font-family: sans-serif; background-color: #1a0d2e; color: #f0e6ff; padding: 30px; border-radius: 10px; border: 2px solid #7d33cc; text-align: center; max-width: 500px; margin: 0 auto;'>"
                 + "<h2 style='color: #ffd700; text-transform: uppercase;'>Saludos, Comandante " + username + "</h2>"
                 + "<p style='font-size: 16px;'>Hemos recibido una solicitud para forjar una nueva llave mágica para tu cuenta.</p>"
                 + "<p style='font-size: 16px;'>Tu pergamino de recuperación dicta el siguiente código:</p>"
@@ -120,11 +120,10 @@ public class AuthService {
         HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         try {
-            // Hacemos el POST
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-            System.out.println("✅ Cuervo enviado con éxito vía Brevo API. Status: " + response.getStatusCode());
+            System.out.println("Cuervo enviado con éxito vía Resend API. Status: " + response.getStatusCode());
         } catch (Exception e) {
-            System.err.println("❌ Error al contactar con la API de Brevo: " + e.getMessage());
+            System.err.println("Error al contactar con la API de Resend: " + e.getMessage());
             throw new RuntimeException("Nuestros cuervos mensajeros han sido interceptados. Inténtalo de nuevo más tarde.");
         }
     }
