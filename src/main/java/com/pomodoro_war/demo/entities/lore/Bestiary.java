@@ -1,5 +1,6 @@
 package com.pomodoro_war.demo.entities.lore;
 
+import com.pomodoro_war.demo.entities.enums.ZoneType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,11 +20,15 @@ public class Bestiary {
     private Long id;
 
     private String name;
-    private String zone;
+
+    @Enumerated(EnumType.STRING)
+    private ZoneType zone;
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
     @Column(length = 1000)
     private String photo;
-    private String team; //Si es hero o bestia
 
+    private String team;
 }

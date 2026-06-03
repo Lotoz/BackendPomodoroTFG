@@ -21,46 +21,42 @@ public class BestiaryService {
     private final BestiaryMapper bestiaryMapper;
     private final WorldProgressRepository worldProgressRepository;
 
-    // Obtener todo el lore filtrado por las zonas descubiertas
     public List<BestiaryResponse> getAllUnlockedEntries(String username) {
         WorldProgress progress = worldProgressRepository.findByUserUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
 
-        List<String> unlockedZones = getUnlockedZones(progress.getCurrentZone());
+        List<ZoneType> unlockedZones = getUnlockedZones(progress.getCurrentZone());
 
         return bestiaryRepository.findAll().stream()
-                .filter(entry -> unlockedZones.contains(entry.getZone().toUpperCase()))
+                .filter(entry -> unlockedZones.contains(entry.getZone()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // Obtener filtrado por bando y por las zonas descubiertas
     public List<BestiaryResponse> getUnlockedEntriesByTeam(String team, String username) {
         WorldProgress progress = worldProgressRepository.findByUserUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
 
-        List<String> unlockedZones = getUnlockedZones(progress.getCurrentZone());
+        List<ZoneType> unlockedZones = getUnlockedZones(progress.getCurrentZone());
 
         return bestiaryRepository.findByTeam(team).stream()
-                .filter(entry -> unlockedZones.contains(entry.getZone().toUpperCase()))
+                .filter(entry -> unlockedZones.contains(entry.getZone()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // desbloqueo por zona
-    private List<String> getUnlockedZones(ZoneType currentZone) {
-        List<String> allowedZones = new ArrayList<>();
+    private List<ZoneType> getUnlockedZones(ZoneType currentZone) {
+        List<ZoneType> allowedZones = new ArrayList<>();
 
-        // El Mundo 1 siempre está desbloqueado
-        allowedZones.add("INITIAL");
+        allowedZones.add(ZoneType.INITIAL);
 
         if (currentZone == ZoneType.FOREST || currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add("FOREST");
+            allowedZones.add(ZoneType.FOREST);
         }
 
         if (currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add("LAVA");
-            allowedZones.add("INFINITE");
+            allowedZones.add(ZoneType.LAVA);
+            allowedZones.add(ZoneType.INFINITE);
         }
 
         return allowedZones;
