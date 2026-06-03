@@ -25,10 +25,11 @@ public class BestiaryService {
         WorldProgress progress = worldProgressRepository.findByUserUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
 
-        List<ZoneType> unlockedZones = getUnlockedZones(progress.getCurrentZone());
+        List<String> unlockedZones = getUnlockedZonesStrings(progress.getCurrentZone());
 
         return bestiaryRepository.findAll().stream()
-                .filter(entry -> unlockedZones.contains(entry.getZone()))
+                // Convertimos el dato de la base a String seguro para compararlo
+                .filter(entry -> unlockedZones.contains(entry.getZone().toString().toUpperCase()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
@@ -37,26 +38,28 @@ public class BestiaryService {
         WorldProgress progress = worldProgressRepository.findByUserUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
 
-        List<ZoneType> unlockedZones = getUnlockedZones(progress.getCurrentZone());
+        List<String> unlockedZones = getUnlockedZonesStrings(progress.getCurrentZone());
 
         return bestiaryRepository.findByTeam(team).stream()
-                .filter(entry -> unlockedZones.contains(entry.getZone()))
+                // Convertimos el dato de la base a String seguro para compararlo
+                .filter(entry -> unlockedZones.contains(entry.getZone().toString().toUpperCase()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    private List<ZoneType> getUnlockedZones(ZoneType currentZone) {
-        List<ZoneType> allowedZones = new ArrayList<>();
+    // Usamos Strings en lugar de Enums puristas para que no falle al leer la DB antigua
+    private List<String> getUnlockedZonesStrings(ZoneType currentZone) {
+        List<String> allowedZones = new ArrayList<>();
 
-        allowedZones.add(ZoneType.INITIAL);
+        allowedZones.add("INITIAL");
 
         if (currentZone == ZoneType.FOREST || currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add(ZoneType.FOREST);
+            allowedZones.add("FOREST");
         }
 
         if (currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add(ZoneType.LAVA);
-            allowedZones.add(ZoneType.INFINITE);
+            allowedZones.add("LAVA");
+            allowedZones.add("INFINITE");
         }
 
         return allowedZones;
