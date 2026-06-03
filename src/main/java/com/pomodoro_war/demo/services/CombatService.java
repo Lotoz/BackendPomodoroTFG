@@ -54,15 +54,19 @@ public class CombatService {
         activeHeroes.forEach(h -> combatants.put(h.getId(), h));
         activeBeasts.forEach(b -> combatants.put(b.getId(), b));
 
-        // --- FASE 1: TURNO DE LOS HÉROES ---
         for (HeroActionRequest action : heroActions) {
             Hero hero = (Hero) combatants.get(action.getHeroId());
 
+            // Si el héroe murió en esta misma ronda antes de su turno, no actúa
             if (hero == null || !hero.isState()) continue;
+
+            long currentBeastsAlive = activeBeasts.stream().filter(Person::isState).count();
+            if (!"HEAL".equals(action.getActionType()) && currentBeastsAlive == 0) {
+                break;
+            }
 
             Person target = combatants.get(action.getTargetId());
 
-            // AUTO-APUNTADO ESTRICTO
             if (target == null || !target.isState()) {
                 if ("HEAL".equals(action.getActionType())) {
                     target = activeHeroes.stream()
@@ -70,19 +74,16 @@ public class CombatService {
                             .findFirst()
                             .orElse(activeHeroes.stream().filter(Person::isState).findFirst().orElse(null));
                 } else {
+                    // Selecciona reactivamente la primera bestia que SÍ esté viva en este milisegundo
                     target = activeBeasts.stream().filter(Person::isState).findFirst().orElse(null);
                 }
             }
 
+            // Si tras el auto-apuntado sigue sin haber un objetivo válido vivo, saltamos la acción
             if (target == null || !target.isState()) {
-                long enemiesAlive = activeBeasts.stream().filter(Person::isState).count();
-                if (!"HEAL".equals(action.getActionType()) && enemiesAlive == 0) {
-                    break;
-                }
                 continue;
             }
 
-            // AHORA PASAMOS PROGRESS Y USERNAME PARA EL CHEQUEO DE VENENO
             if (applyStatusEffects(hero, progress, username, logs)) continue;
             if (checkExhaustion(hero, logs)) continue;
 
@@ -99,18 +100,18 @@ public class CombatService {
             }
         }
 
-        activeBeasts.removeIf(beast -> !beast.isState());
-
-        // --- FASE 2: COMPROBAR VICTORIA TEMPRANA ---
-        if (activeBeasts.isEmpty() && !heroActions.isEmpty()) {
+        long beastsAliveAfterHeroes = activeBeasts.stream().filter(Person::isState).count();
+        if (beastsAliveAfterHeroes == 0) {
+            // Limpieza física requerida para la persistencia antes de cantar victoria
+            activeBeasts.removeIf(beast -> !beast.isState());
             return handleVictory(progress, activeHeroes, logs);
         }
 
-        // --- FASE 3: TURNO DE LAS BESTIAS ---
         for (Beast beast : activeBeasts) {
+            // COMPROBACIÓN REPRODUCTIVA: Si murió por ataques previos o veneno en su propio mantenimiento
             if (!beast.isState()) continue;
 
-            // FIX: COMPROBAMOS SI QUEDAN HÉROES ANTES DE CADA ATAQUE
+            // Comprobamos si quedan héroes en pie antes de que este monstruo específico alce su arma
             long heroesAlive = activeHeroes.stream().filter(Person::isState).count();
             if (heroesAlive == 0) break;
 
@@ -118,7 +119,7 @@ public class CombatService {
             if (checkExhaustion(beast, logs)) continue;
 
             Hero target = selectIntelligentTarget(activeHeroes);
-            if (target != null) {
+            if (target != null && target.isState()) { // Validamos que el objetivo inteligente siga vivo
                 if (beast instanceof Magic magicBeast && Math.random() > 0.6) {
                     magicBeast.applicationStun(target);
                     logs.add(beast.getName() + " aturdió a " + target.getName() + ".");
@@ -127,14 +128,14 @@ public class CombatService {
                 }
             }
         }
-
+        // Removemos las entidades muertas de las listas antes de guardar el estado definitivo
+        activeBeasts.removeIf(beast -> !beast.isState());
         activeHeroes.removeIf(hero -> !hero.isState());
 
-        // --- FASE 4: GUARDAR ESTADO Y COMPROBAR DERROTA ---
         personRepository.saveAll(activeHeroes);
         personRepository.saveAll(activeBeasts);
 
-        if (activeHeroes.isEmpty() && !heroActions.isEmpty()) {
+        if (activeHeroes.isEmpty()) {
             return handleDefeat(progress, activeBeasts, logs);
         }
 
