@@ -22,44 +22,46 @@ public class BestiaryService {
     private final WorldProgressRepository worldProgressRepository;
 
     public List<BestiaryResponse> getAllUnlockedEntries(String username) {
-        WorldProgress progress = worldProgressRepository.findByUserUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
+        ZoneType currentZone = worldProgressRepository.findByUserUsername(username)
+                .map(WorldProgress::getCurrentZone)
+                .orElse(ZoneType.INITIAL);
 
-        List<String> unlockedZones = getUnlockedZonesStrings(progress.getCurrentZone());
+        List<ZoneType> unlockedZones = getUnlockedZones(currentZone);
 
         return bestiaryRepository.findAll().stream()
-                // Convertimos el dato de la base a String seguro para compararlo
-                .filter(entry -> unlockedZones.contains(entry.getZone().toString().toUpperCase()))
+                // Comparación estricta y limpia con Enums
+                .filter(entry -> entry.getZone() != null && unlockedZones.contains(entry.getZone()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public List<BestiaryResponse> getUnlockedEntriesByTeam(String team, String username) {
-        WorldProgress progress = worldProgressRepository.findByUserUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("Progreso no encontrado"));
+        ZoneType currentZone = worldProgressRepository.findByUserUsername(username)
+                .map(WorldProgress::getCurrentZone)
+                .orElse(ZoneType.INITIAL);
 
-        List<String> unlockedZones = getUnlockedZonesStrings(progress.getCurrentZone());
+        List<ZoneType> unlockedZones = getUnlockedZones(currentZone);
 
         return bestiaryRepository.findByTeam(team).stream()
-                // Convertimos el dato de la base a String seguro para compararlo
-                .filter(entry -> unlockedZones.contains(entry.getZone().toString().toUpperCase()))
+                .filter(entry -> entry.getZone() != null && unlockedZones.contains(entry.getZone()))
                 .map(bestiaryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    // Usamos Strings en lugar de Enums puristas para que no falle al leer la DB antigua
-    private List<String> getUnlockedZonesStrings(ZoneType currentZone) {
-        List<String> allowedZones = new ArrayList<>();
+    private List<ZoneType> getUnlockedZones(ZoneType currentZone) {
+        List<ZoneType> allowedZones = new ArrayList<>();
 
-        allowedZones.add("INITIAL");
+        allowedZones.add(ZoneType.INITIAL);
 
-        if (currentZone == ZoneType.FOREST || currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add("FOREST");
-        }
+        if (currentZone != null) {
+            if (currentZone == ZoneType.FOREST || currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
+                allowedZones.add(ZoneType.FOREST);
+            }
 
-        if (currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
-            allowedZones.add("LAVA");
-            allowedZones.add("INFINITE");
+            if (currentZone == ZoneType.LAVA || currentZone == ZoneType.INFINITE) {
+                allowedZones.add(ZoneType.LAVA);
+                allowedZones.add(ZoneType.INFINITE);
+            }
         }
 
         return allowedZones;
