@@ -56,27 +56,27 @@ public class TavernService {
                     return worldProgressRepository.save(newProgress);
                 });
 
-        // 1. Semilla GLOBAL basada en el DÍA y en la ZONA del jugador.
+        //  Semilla GLOBAL basada en el DÍA y en la ZONA del jugador.
         // Así todos los jugadores en el mismo mundo ven las mismas ofertas iniciales.
         long seed = LocalDate.now().toEpochDay() + progress.getCurrentZone().name().hashCode();
         Random dailyRandom = new Random(seed);
 
         List<String> allowedClasses = getAllowedHeroClasses(progress.getCurrentZone());
 
-        // 2. Generamos SIEMPRE los 4 héroes fijos del servidor para este día
+        // Generamos SIEMPRE los 4 héroes fijos del servidor para este día
         List<Hero> globalDailyOffers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             String heroClass = allowedClasses.get(dailyRandom.nextInt(allowedClasses.size()));
             globalDailyOffers.add(generateHeroTemplate(heroClass, i));
         }
 
-        // 3. Obtenemos el historial personal de este jugador concreto
+        // Obtenemos el historial personal de este jugador concreto
         List<String> hiredHeroNames = personRepository.findAllAliveHeroesByUsername(username)
                 .stream().map(Hero::getName).toList();
         List<String> deadHeroNames = fallenHeroRepository.findByUserUsernameOrderByFallenAtDesc(username)
                 .stream().map(fh -> fh.getName()).toList();
 
-        // 4. Filtramos la lista global: Quitamos los que el jugador ya tiene en su ejército o cementerio
+        // Filtramos la lista global: Quitamos los que el jugador ya tiene en su ejército o cementerio
         return globalDailyOffers.stream()
                 .filter(h -> !hiredHeroNames.contains(h.getName()) && !deadHeroNames.contains(h.getName()))
                 .toList();
