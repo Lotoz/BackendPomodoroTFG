@@ -1,6 +1,6 @@
 package com.pomodoro_war.demo.controller;
 
-import com.pomodoro_war.demo.entities.auth.User;
+import com.pomodoro_war.demo.dtos.response.UserAdminResponse;
 import com.pomodoro_war.demo.services.AdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +19,9 @@ public class AdminController {
 
     // Obtener lista de todos los usuarios
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers(Authentication auth) {
+    public ResponseEntity<List<UserAdminResponse>> getAllUsers(Authentication auth) {
         return ResponseEntity.ok(adminService.getAllUsers(auth.getName()));
     }
-
     // Actualizar correo o contraseña de un usuario
     @PatchMapping("/users/{username}")
     public ResponseEntity<?> updateUser(

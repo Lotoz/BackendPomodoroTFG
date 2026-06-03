@@ -1,5 +1,6 @@
 package com.pomodoro_war.demo.services;
 
+import com.pomodoro_war.demo.dtos.response.UserAdminResponse;
 import com.pomodoro_war.demo.entities.auth.User;
 import com.pomodoro_war.demo.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,9 +28,17 @@ public class AdminService {
         }
     }
 
-    public List<User> getAllUsers(String adminUsername) {
+    public List<UserAdminResponse> getAllUsers(String adminUsername) {
         verifyAdminRole(adminUsername);
-        return userRepository.findAll();
+
+        return userRepository.findAll().stream()
+                .map(user -> new UserAdminResponse(
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getMasterName(),
+                        user.getRole()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Transactional

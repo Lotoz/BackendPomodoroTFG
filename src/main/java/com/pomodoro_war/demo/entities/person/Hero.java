@@ -33,9 +33,8 @@ public abstract class Hero extends Person {
 
         // Aumentamos las estadísticas base
         this.lifeMax += 15; // Gana 15 de vida máxima por nivel
-        this.life = this.lifeMax; // Se cura por completo al subir de nivel (opcional)
-        this.armor += 2; // Gana 2 de armadura
-
-        // Si quieres que el daño escale, podrías añadir un atributo 'fuerzaBase'
+        this.life = this.lifeMax; // Se cura por completo al subir de nivel
+        this.totalArmor += 9;
+        this.armor = this.totalArmor; // Obtiene armadura total tambien
     }
 }

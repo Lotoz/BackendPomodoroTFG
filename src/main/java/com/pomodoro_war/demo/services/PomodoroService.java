@@ -82,19 +82,13 @@ public class PomodoroService {
 
         for (Hero hero : activeHeroes) {
             if (hero.isState()) { // Solo afecta a los héroes que no han muerto
-
-
-                //recuperar vida
-                hero.setLife(hero.getLifeMax());
-                //Recuperar armadura.
-                hero.setArmor(hero.getTotalArmor());
+                //Se quita todo y se se sube de nivel
                 hero.setPoisoned(false);
                 hero.setPoisonTurns(0);
                 hero.setStun(false);
                 hero.setTimeStun(0);
                 //Subir nivel para mejorar armadura y vida
                 hero.levelUp();
-
             }
         }
 
