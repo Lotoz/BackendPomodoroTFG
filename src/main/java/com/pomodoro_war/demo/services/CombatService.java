@@ -209,20 +209,25 @@ public class CombatService {
         }
         return teamEnemy.stream().filter(Person::isState).findFirst().orElse(null);
     }
+
     private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
         if (target.getLife() <= 0 && target.isState()) {
-            target.setState(false);
+            target.setState(false); // Borrado lógico (el héroe desaparece del campamento)
 
             if (target instanceof Hero hero) {
                 String killerName = (killer != null) ? killer.getName() : "el veneno o sus heridas";
                 String reason = String.format("Cayó defendiendo el reino. Abatido por %s en la etapa %d de %s.",
                         killerName, progress.getCurrentStage(), progress.getCurrentZone().name());
 
-                FallenHero grave = new FallenHero(null, hero.getName(), hero.getClass().getSimpleName(),
-                        hero.getLevel(), reason, LocalDateTime.now(),
-                        progress.getUser());
-
-                fallenHeroRepository.saveAndFlush(grave);
+                // Inyeccion nativa a fuerza bruta
+                fallenHeroRepository.buryHeroNative(
+                        hero.getName(),
+                        hero.getClass().getSimpleName(),
+                        hero.getLevel(),
+                        reason,
+                        LocalDateTime.now(),
+                        username
+                );
 
                 logs.add("¡" + hero.getName() + " ha muerto! Su alma descansa en el Cementerio.");
             } else {
