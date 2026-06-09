@@ -219,7 +219,6 @@ public class CombatService {
                 String reason = String.format("Cayó defendiendo el reino. Abatido por %s en la etapa %d de %s.",
                         killerName, progress.getCurrentStage(), progress.getCurrentZone().name());
 
-                // Inyeccion nativa a fuerza bruta
                 fallenHeroRepository.buryHeroNative(
                         hero.getName(),
                         hero.getClass().getSimpleName(),

@@ -22,7 +22,7 @@ public interface FallenHeroRepository extends JpaRepository<FallenHero, Long> {
 
     // SOLUCIÓN: Query nativa que ignora el recolector de basura de Hibernate
     @Modifying
-    @Query(value = "INSERT INTO fallen_hero (name, hero_class, level, death_reason, fallen_at, username) " +
+    @Query(value = "INSERT INTO graveyard (name, hero_class, level, death_reason, fallen_at, username) " +
             "VALUES (:name, :heroClass, :level, :deathReason, :fallenAt, :username)", nativeQuery = true)
     void buryHeroNative(@Param("name") String name,
                         @Param("heroClass") String heroClass,
