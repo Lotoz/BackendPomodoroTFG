@@ -128,12 +128,12 @@ public class CombatService {
                 }
             }
         }
-        // Removemos las entidades muertas de las listas antes de guardar el estado definitivo
-        activeBeasts.removeIf(beast -> !beast.isState());
-        activeHeroes.removeIf(hero -> !hero.isState());
 
         personRepository.saveAll(activeHeroes);
         personRepository.saveAll(activeBeasts);
+
+        activeBeasts.removeIf(beast -> !beast.isState());
+        activeHeroes.removeIf(hero -> !hero.isState());
 
         if (activeHeroes.isEmpty()) {
             return handleDefeat(progress, activeBeasts, logs);
@@ -210,21 +210,21 @@ public class CombatService {
         return teamEnemy.stream().filter(Person::isState).findFirst().orElse(null);
     }
 
-    // MÉTODO UNIFICADO: Maneja tanto la muerte de héroes como de bestias
     private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
         if (target.getLife() <= 0 && target.isState()) {
-            target.setState(false);
+            target.setState(false); // Borrado lógico: El héroe ya no está vivo
 
             if (target instanceof Hero hero) {
                 String killerName = (killer != null) ? killer.getName() : "el veneno o sus heridas";
                 String reason = String.format("Cayó defendiendo el reino. Abatido por %s en la etapa %d de %s.",
                         killerName, progress.getCurrentStage(), progress.getCurrentZone().name());
+
                 FallenHero grave = new FallenHero(null, hero.getName(), hero.getClass().getSimpleName(),
                         hero.getLevel(), reason, LocalDateTime.now(),
                         userRepository.getReferenceById(username));
 
+                // Guardamos la tumba
                 fallenHeroRepository.save(grave);
-                personRepository.delete(hero); // Lo borramos del equipo activo
 
                 logs.add("¡" + hero.getName() + " ha muerto! Su alma descansa en el Cementerio.");
             } else {
