@@ -209,22 +209,18 @@ public class CombatService {
         }
         return teamEnemy.stream().filter(Person::isState).findFirst().orElse(null);
     }
-    private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
-        System.out.println("========== DEBUG MUERTE ==========");
-        System.out.println("Evaluando a: " + target.getName() + " | Vida: " + target.getLife() + " | isState: " + target.isState());
 
-        if (target.getLife() <= 0 && target.isState()) {
-            System.out.println(">> ¡CONDICIÓN DE MUERTE CUMPLIDA PARA " + target.getName() + "!");
-            target.setState(false);
+    private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
+        if (target.getLife() <= 0) {
+            target.setState(false); // Lo aseguramos por si acaso
 
             if (target instanceof Hero hero) {
-                System.out.println(">> Es un héroe. Preparando epitafio...");
                 String killerName = (killer != null) ? killer.getName() : "el veneno o sus heridas";
                 String reason = String.format("Cayó defendiendo el reino. Abatido por %s en la etapa %d de %s.",
                         killerName, progress.getCurrentStage(), progress.getCurrentZone().name());
 
                 try {
-                    System.out.println(">> Ejecutando Query SQL Nativa...");
+                    // Guardado nativo a salvo de Hibernate
                     fallenHeroRepository.buryHeroNative(
                             hero.getName(),
                             hero.getClass().getSimpleName(),
@@ -233,10 +229,8 @@ public class CombatService {
                             LocalDateTime.now(),
                             username
                     );
-                    System.out.println(">> ¡QUERY EJECUTADA SIN ERRORES!");
                 } catch (Exception e) {
-                    System.err.println(">> [ERROR CRÍTICO] FALLÓ AL INSERTAR EN LA BASE DE DATOS:");
-                    e.printStackTrace(); // Esto nos dirá si falta una columna o hay un error de claves
+                    System.err.println("Error al enterrar al héroe: " + e.getMessage());
                 }
 
                 logs.add("¡" + hero.getName() + " ha muerto! Su alma descansa en el Cementerio.");
@@ -244,7 +238,6 @@ public class CombatService {
                 logs.add(target.getName() + " ha sido destruido.");
             }
         }
-        System.out.println("==================================");
     }
 
     private CombatStateResponse handleVictory(WorldProgress progress, List<Hero> heroes, List<String> logs) {
