@@ -209,10 +209,9 @@ public class CombatService {
         }
         return teamEnemy.stream().filter(Person::isState).findFirst().orElse(null);
     }
-
     private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
         if (target.getLife() <= 0 && target.isState()) {
-            target.setState(false); // Borrado lógico: El héroe ya no está vivo
+            target.setState(false);
 
             if (target instanceof Hero hero) {
                 String killerName = (killer != null) ? killer.getName() : "el veneno o sus heridas";
@@ -221,10 +220,9 @@ public class CombatService {
 
                 FallenHero grave = new FallenHero(null, hero.getName(), hero.getClass().getSimpleName(),
                         hero.getLevel(), reason, LocalDateTime.now(),
-                        userRepository.getReferenceById(username));
+                        progress.getUser());
 
-                // Guardamos la tumba
-                fallenHeroRepository.save(grave);
+                fallenHeroRepository.saveAndFlush(grave);
 
                 logs.add("¡" + hero.getName() + " ha muerto! Su alma descansa en el Cementerio.");
             } else {
