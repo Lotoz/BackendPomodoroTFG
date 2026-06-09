@@ -209,30 +209,42 @@ public class CombatService {
         }
         return teamEnemy.stream().filter(Person::isState).findFirst().orElse(null);
     }
-
     private void checkDeath(Person target, Person killer, WorldProgress progress, String username, List<String> logs) {
+        System.out.println("========== DEBUG MUERTE ==========");
+        System.out.println("Evaluando a: " + target.getName() + " | Vida: " + target.getLife() + " | isState: " + target.isState());
+
         if (target.getLife() <= 0 && target.isState()) {
-            target.setState(false); // Borrado lógico (el héroe desaparece del campamento)
+            System.out.println(">> ¡CONDICIÓN DE MUERTE CUMPLIDA PARA " + target.getName() + "!");
+            target.setState(false);
 
             if (target instanceof Hero hero) {
+                System.out.println(">> Es un héroe. Preparando epitafio...");
                 String killerName = (killer != null) ? killer.getName() : "el veneno o sus heridas";
                 String reason = String.format("Cayó defendiendo el reino. Abatido por %s en la etapa %d de %s.",
                         killerName, progress.getCurrentStage(), progress.getCurrentZone().name());
 
-                fallenHeroRepository.buryHeroNative(
-                        hero.getName(),
-                        hero.getClass().getSimpleName(),
-                        hero.getLevel(),
-                        reason,
-                        LocalDateTime.now(),
-                        username
-                );
+                try {
+                    System.out.println(">> Ejecutando Query SQL Nativa...");
+                    fallenHeroRepository.buryHeroNative(
+                            hero.getName(),
+                            hero.getClass().getSimpleName(),
+                            hero.getLevel(),
+                            reason,
+                            LocalDateTime.now(),
+                            username
+                    );
+                    System.out.println(">> ¡QUERY EJECUTADA SIN ERRORES!");
+                } catch (Exception e) {
+                    System.err.println(">> [ERROR CRÍTICO] FALLÓ AL INSERTAR EN LA BASE DE DATOS:");
+                    e.printStackTrace(); // Esto nos dirá si falta una columna o hay un error de claves
+                }
 
                 logs.add("¡" + hero.getName() + " ha muerto! Su alma descansa en el Cementerio.");
             } else {
                 logs.add(target.getName() + " ha sido destruido.");
             }
         }
+        System.out.println("==================================");
     }
 
     private CombatStateResponse handleVictory(WorldProgress progress, List<Hero> heroes, List<String> logs) {
